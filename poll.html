@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vote for the New Internet name</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #005f99;
+        }
+
+        p {
+            font-size: 1em;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        #voteForm {
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+
+        #voteForm label {
+            display: block;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            font-size: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+
+        #voteForm label input {
+            margin-right: 15px;
+            transform: scale(1.5);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 10px auto;
+            padding: 15px;
+            font-size: 1.2em;
+            background-color: #007acc;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #005f99;
+        }
+
+        #results {
+            max-width: 400px;
+            margin: 20px auto 0 auto;
+            text-align: center;
+        }
+
+        #results h2 {
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            color: #005f99;
+        }
+
+        #resultsList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #resultsList li {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            font-size: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #resetButton {
+            width: 50%;
+            font-size: 0.9em;
+            padding: 10px;
+            background-color: #ff4d4d;
+        }
+
+        #resetButton:hover {
+            background-color: #cc0000;
+        }
+
+        @media (min-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            p {
+                font-size: 1.1em;
+            }
+
+            button {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Vote for the New Internet name</h1>
+    <p>Think about a new "Internet" that is more SECURE, RELIABLE and TRANSPARENT, giving you the capability to become the owner of your content.</p>
+    <p>Please choose one or more of the following options:</p>
+    <form id="voteForm">
+    </form>
+    <button id="submitButton">Submit Vote</button>
+
+    <div id="results" style="display: none;">
+        <h2>Current Results</h2>
+        <ul id="resultsList">
+        </ul>
+        <p id="votersCount"></p>
+        <button id="voteAgainButton">Vote Again</button>
+    </div>
+
+    <button id="resetButton" style="display: none;">RESET</button>
+
+    <script>
+        const options = ['Safenet', 'Verinet', 'Trustnet', 'Polinet'];
+
+        let voteCounts = JSON.parse(localStorage.getItem('voteCounts')) || {
+            'Safenet': 0,
+            'Verinet': 0,
+            'Trustnet': 0,
+            'Polinet': 0
+        };
+
+        let totalVoters = Number(localStorage.getItem('totalVoters')) || 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        shuffle(options);
+
+        const voteForm = document.getElementById('voteForm');
+        options.forEach(option => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'option';
+            checkbox.value = option;
+            label.appendChild(checkbox);
+            const optionText = document.createElement('span');
+            optionText.textContent = option;
+            label.appendChild(optionText);
+            voteForm.appendChild(label);
+        });
+
+        const submitButton = document.getElementById('submitButton');
+        const resultsDiv = document.getElementById('results');
+        const resultsList = document.getElementById('resultsList');
+        const voteAgainButton = document.getElementById('voteAgainButton');
+        const votersCountElement = document.getElementById('votersCount');
+        const resetButton = document.getElementById('resetButton');
+
+        submitButton.addEventListener('click', function() {
+            const selectedOptions = [];
+            const checkboxes = document.querySelectorAll('input[name="option"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedOptions.push(checkbox.value);
+            });
+
+            if (selectedOptions.length === 0) {
+                alert('Please select at least one option.');
+                return;
+            }
+
+            selectedOptions.forEach(option => {
+                voteCounts[option]++;
+            });
+
+            totalVoters++;
+
+            localStorage.setItem('voteCounts', JSON.stringify(voteCounts));
+            localStorage.setItem('totalVoters', totalVoters);
+
+            displayResults();
+        });
+
+        function displayResults() {
+            voteForm.style.display = 'none';
+            submitButton.style.display = 'none';
+
+            resultsList.innerHTML = '';
+
+            for (let option in voteCounts) {
+                const li = document.createElement('li');
+                li.textContent = `${option}: ${voteCounts[option]} vote(s)`;
+                resultsList.appendChild(li);
+            }
+
+            votersCountElement.textContent = `Total voters: ${totalVoters}`;
+
+            resultsDiv.style.display = 'block';
+
+            resetButton.style.display = 'block';
+        }
+
+        voteAgainButton.addEventListener('click', function() {
+            voteForm.style.display = 'block';
+            submitButton.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            const checkboxes = document.querySelectorAll('input[name="option"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+
+        resetButton.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset all votes?')) {
+                localStorage.removeItem('voteCounts');
+                localStorage.removeItem('totalVoters');
+
+                voteCounts = {
+                    'Safenet': 0,
+                    'Verinet': 0,
+                    'Trustnet': 0,
+                    'Polinet': 0
+                };
+                totalVoters = 0;
+
+                location.reload();
+            }
+        });
+
+    </script>
+</body>
+</html>
